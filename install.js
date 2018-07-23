@@ -1,7 +1,8 @@
 function installWorkers() {
   var workers = [
     'cat/sw.js',
-    'dog/sw.js'
+    'dog/sw.js',
+    'global_sw.js'
   ];
   for (let workerUrl of workers) {
     navigator.serviceWorker.register(workerUrl)
