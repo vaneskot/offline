@@ -35,6 +35,7 @@
       .then(function(response) {
         data.result = response.status;
         parent.postMessage(data, TARGET_ORIGIN);
+        response.text().then(function (text) { console.log(text); });
       })
       .catch(function(error) {
         data.result = "failed";
