@@ -1,0 +1,44 @@
+<script>
+  const TARGET_ORIGIN = "https://kotenkov.browser.yandex.net";
+
+  window.addEventListener("message", onMessageReceived, false);
+
+  function onMessageReceived(event) {
+    if (event.origin !== TARGET_ORIGIN)
+      return;
+    const data = event.data;
+    if (!data.type)
+      return;
+    if (data.type === "installServiceWorker") {
+      installServiceWorker();
+    } else if (data.type === "checkOffline") {
+      tryToFetch(data.url, data.requestId);
+    }
+  }
+
+  function installServiceWorker() {
+    navigator.serviceWorker.register('cat/sw.js')
+      .then(registration => {
+        console.log("Registration successful. Scope:", registration.scope);
+      })
+      .catch(error => {
+        console.log("Could not register Service Worker. Error:", error);
+      });
+  }
+
+  function tryToFetch(url, requestId) {
+    if (!url || !requestId)
+      return;
+    let data = {type: "checkOfflineResult", requestId: requestId};
+
+    fetch(url)
+      .then(function(response) {
+        data.result = response.status;
+        parent.postMessage(data, TARGET_ORIGIN);
+      })
+      .catch(function(error) {
+        data.result = "failed";
+        parent.postMessage(data, TARGET_ORIGIN);
+      });
+  }
+</script>
