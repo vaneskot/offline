@@ -1,3 +1,4 @@
+<iframe id="frame" width=1 height=1></iframe>
 <script>
   const TARGET_ORIGIN = "https://kotenkov.browser.yandex.net";
 
@@ -12,12 +13,14 @@
     if (data.type === "installServiceWorker") {
       installServiceWorker();
     } else if (data.type === "checkOffline") {
-      tryToFetch(data.url, data.requestId);
+      tryToFetch(window, data.url, data.requestId);
+    } else if (data.type === "checkOfflineIframe") {
+      tryFrame(data.url, data.requestId);
     }
   }
 
   function installServiceWorker() {
-    navigator.serviceWorker.register('sw.js')
+    navigator.serviceWorker.register("sw.js")
       .then(registration => {
         console.log("Registration successful. Scope:", registration.scope);
       })
@@ -26,12 +29,12 @@
       });
   }
 
-  function tryToFetch(url, requestId) {
+  function tryToFetch(w, url, requestId) {
     if (!url || !requestId)
       return;
     let data = {type: "checkOfflineResult", requestId: requestId};
 
-    fetch(url)
+    w.fetch(url)
       .then(function(response) {
         data.result = response.status;
         parent.postMessage(data, TARGET_ORIGIN);
@@ -41,5 +44,17 @@
         data.result = "failed";
         parent.postMessage(data, TARGET_ORIGIN);
       });
+  }
+
+  function tryFrame(url, requestId) {
+    let frame = document.getElementById('frame');
+    let data = {type: "checkOfflineResult", requestId: requestId};
+    function onFrameLoad() {
+      data.result = frame.contentDocument ? "loaded" : "failed";
+      parent.postMessage(data, TARGET_ORIGIN);
+      frame.removeEventListener('load', onFrameLoad, false);
+    }
+    frame.addEventListener('load', onFrameLoad, false);
+    frame.src = url;
   }
 </script>
