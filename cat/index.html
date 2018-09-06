@@ -1,3 +1,21 @@
 <img src="image.jpg">
-<br>
-We are not explicitly installing the service worker for this page, but it still should work offline if install.html was loaded.
+<script>
+if ('serviceWorker' in navigator) {
+  installWorkers();
+}
+
+function installWorkers() {
+  var workers = [
+    'sw.js',
+  ];
+  for (let workerUrl of workers) {
+    navigator.serviceWorker.register(workerUrl)
+      .then(registration => {
+        console.log("Registration successful. Scope:", registration.scope);
+      })
+      .catch(error => {
+        console.log("Could not register Service Worker. Error:", error);
+      });
+  }
+}
+</script>
