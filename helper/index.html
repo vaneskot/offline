@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+        var parentHostParser = document.createElement('a');
+        parentHostParser.href = document.referrer;
+        var parentHostname = "localhost.msup.yandex.ru";
+        var parentPort = parentHostParser.port ? ':' + parentHostParser.port : '';
+        var updatingOfflineList = false;
+
+        window.addEventListener('message', function(e) {
+            if (!isValidOrigin(parentHostname)) {
+                return console.error('invalid origin', e.origin);
+            }
+
+            if (e.data.type === 'cast-offline-games') {
+                getAndReportOfflineList(e.data.games);
+            }
+        });
+
+        function getAndReportOfflineList(games) {
+            if (typeof caches !== 'object' || updatingOfflineList || !games.length) {
+              return;
+            }
+            updatingOfflineList = true;
+
+            Promise
+                .all(games.map(info => caches.match(info.url, { ignoreSearch: true }).then(
+                                  res => res ? info.id : null)))
+                .then(results => reportOfflineGames(results.filter(x => x !== null)));
+        }
+
+        function reportOfflineGames(offlineList) {
+            console.log(offlineList);
+            updatingOfflineList = false;
+            window.parent.postMessage({
+                type: 'list',
+                offlineList: offlineList
+            }, 'https://' + parentHostname + parentPort);
+        }
+
+        function isValidOrigin(hostname) {
+            var tld = getTld(hostname);
+            var lastHostPart = hostname
+                .replace('.' + tld, '')
+                .split('.')
+                .pop();
+
+          return true;
+        }
+
+        function getTld(hostname) {
+            var parts = hostname.split('.');
+            var tld = parts[parts.length - 1];
+            var sld = parts[parts.length - 2];
+
+            if (sld === 'com' && tld === 'tr') {
+                return 'com.tr';
+            }
+
+            return tld;
+        }
+    </script>
+</head>
+</html>
