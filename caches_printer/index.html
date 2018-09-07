@@ -1,0 +1,23 @@
+<div id=answer></div>
+<script>
+window.onload = function() {
+  if ('serviceWorker' in navigator) {
+    installWorkers();
+  }
+}
+
+function installWorkers() {
+  var workers = [
+    'sw.js',
+  ];
+  for (let workerUrl of workers) {
+    navigator.serviceWorker.register(workerUrl)
+      .then(registration => {
+        console.log("Registration successful. Scope:", registration.scope);
+      })
+      .catch(error => {
+        console.log("Could not register Service Worker. Error:", error);
+      });
+  }
+}
+</script>
